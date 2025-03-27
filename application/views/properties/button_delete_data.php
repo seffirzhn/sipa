@@ -1,0 +1,1 @@
+<button type="button" class="btn btn-sm btn-danger confirm-delete ml-1"><i class="ti-trash"></i></button>

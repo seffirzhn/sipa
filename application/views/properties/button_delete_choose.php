@@ -1,0 +1,1 @@
+<button type="button" class="btn btn-danger" id="delete-by-select"><i class="ti-trash"></i> <span class="d-md-inline-flex d-none">Hapus Terpilih</span></button>

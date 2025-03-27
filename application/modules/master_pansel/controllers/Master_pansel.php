@@ -1,0 +1,156 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Master_pansel extends MX_Controller
+{
+	
+	public function __construct()
+	{
+		parent::__construct();
+		$this->auth_model->checkIslogout();
+        $this->load->model("master_pansel_model");
+        $this->column   = array(
+                            "no"=>array("text"=>"#","sorting"=>"false","width"=>4,"align"=>"center"),
+                            "nama_pansel"=>array("text"=>"Nama","sorting"=>"true","type_sort"=>"asc","width"=>20,"align"=>"left"),
+                            "jenis_identitas"=>array("text"=>"Identitas","sorting"=>"true","width"=>5,"align"=>"left"),
+                            "nomor_identitas"=>array("text"=>"No. Identitas","sorting"=>"true","width"=>20,"align"=>"left"),
+                            "asal"=>array("text"=>"Asal","sorting"=>"false","width"=>15,"align"=>"left"),
+                            "kontak"=>array("text"=>"Kontak","sorting"=>"false","width"=>15,"align"=>"left"),
+                            "file"=>array("text"=>"File","sorting"=>"false","width"=>10,"align"=>"center"),
+                            "active"=>array("text"=>"Status","sorting"=>"false","width"=>10,"align"=>"center"),
+                            "aksi"=>array("text"=>"Aksi","sorting"=>"false","width"=>8,"align"=>"center"),
+                        );
+        $this->module   = "master_pansel";
+        $this->configinput = array(
+                            array(
+                                'field' => 'newnama_pansel',
+                                'label' => 'Nama Pansel',
+                                'rules' => 'trim|required'
+                            ),
+                            array(
+                                'field' => 'newnomor_identitas',
+                                'label' => 'Nomor Identiras',
+                                'rules' => 'trim|required|numeric'
+                            ),
+                        );
+	}
+
+    function datagrid(){
+        $this->auth_model->checkModulecrud("acl_read",$this->module);
+        $param['column']        = $this->column;
+        $param['modulecrud']    = $this->auth_model->getModulecrud($this->module);
+        $response               = $this->master_pansel_model->getDatagrid($param);
+        echo json_encode($response);
+    }
+
+    function deletedata(){
+        $this->auth_model->checkModulecrud("acl_delete",$this->module);
+        $response                 = $this->master_pansel_model->deleteData();
+        echo json_encode($response);
+    }
+
+    function showform(){
+        $this->auth_model->checkModulecrud("acl_read",$this->module);
+        $id = trim($this->input->post("id"));
+        $dt                         = $this->master_pansel_model->getDatabyid();
+        $this->load->helper('file');    
+        $param["id_pansel"]         = $dt["id_pansel"]?:"";
+        $param["jenis_identitas"]   = $dt["jenis_identitas"]?:"";
+        $param["listjenis"]   = array(""=>"-- Pilih Jenis Identitas --","NIP"=>"NIP","NIK"=>"NIK","NIDN"=>"NIDN");
+        $param["nama_pansel"]       = $dt["nama_pansel"]?:"";
+        $param["nomor_identitas"]   = $dt["nomor_identitas"]?:"";
+        $param["alamat"]            = $dt["alamat"]?:"";
+        $param["no_telp"]           = $dt["no_telp"]?:"";
+        $param["email"]             = $dt["email"]?:"";
+        $param["asal"]              = $dt["asal"]?:"";
+        $param["file"]              = $dt["file"]?:"";
+        $param['ext_file']          = get_mime_by_extension(realpath($param["file"]));
+        $param["active"]            = isset($dt["is_active"])?$dt["is_active"]:"1";
+
+        $data["id"]                 = ($dt==null) ? "":$id;
+        $data['html']               = $this->load->view('master_pansel_form',$param,true);
+        $response['status']         = "success";
+        $response['message']        = "Get Form";
+        $response['data']           = $data;
+        echo json_encode($response);
+    }
+
+    function createdata(){
+        $this->auth_model->checkModulecrud("acl_create",$this->module);
+        $response                 = $this->auth_model->setValidasiinput($this->configinput);
+        if($response['status']=="success"){
+            $fileberkas = null;
+            if(!empty($_FILES["newfile"]["name"])){
+                makeDirektori("./resources/master_pansel");
+                $filename                = $_FILES["newfile"]["name"];
+                $config['upload_path']   = realpath("resources/master_pansel/");
+                $config['overwrite']     = FALSE;
+                $config['remove_spaces'] = TRUE;
+                $config['max_size']      = 2000;
+                $config['allowed_types'] = 'png|jpg|jpeg';
+                $config['encrypt_name']  = FALSE;
+                $config['file_name']     = $filename;
+                $this->load->library('upload', $config);
+                $this->upload->initialize($config);
+                if(!$this->upload->do_upload('newfile')){
+                    $response["status"]    = "error";
+                    $response["message"]   = $this->upload->display_errors();
+                    echo json_encode($response);
+                    exit();
+                }else{
+                    $file_info           = $this->upload->data();
+                    $fileberkas          = "resources/master_pansel/".$file_info["file_name"];
+                }
+            }
+            $response  = $this->master_pansel_model->createData($fileberkas);
+        }
+        echo json_encode($response);
+    }
+
+    function updatedata(){
+        $this->auth_model->checkModulecrud("acl_update",$this->module);
+        $response                 = $this->auth_model->setValidasiinput($this->configinput);
+        if($response['status']=="success"){
+            $fileberkas = null;
+            if(!empty($_FILES["newfile"]["name"])){
+                makeDirektori("./resources/master_pansel");
+                makeDirektori("./resources/master_pansel/");
+                $filename                = $_FILES["newfile"]["name"];
+                $config['upload_path']   = realpath("resources/master_pansel/");
+                $config['overwrite']     = FALSE;
+                $config['remove_spaces'] = TRUE;
+                $config['max_size']      = 2000;
+                $config['allowed_types'] = 'png|jpg|jpeg';
+                $config['encrypt_name']  = FALSE;
+                $config['file_name']     = $filename;
+                $this->load->library('upload', $config);
+                $this->upload->initialize($config);
+                if(!$this->upload->do_upload('newfile')){
+                    $response["status"]    = "error";
+                    $response["message"]   = $this->upload->display_errors();
+                    echo json_encode($response);
+                    exit();
+                }else{
+                    $file_info           = $this->upload->data();
+                    $fileberkas          = "resources/master_pansel/".$file_info["file_name"];
+                }
+            }
+            $response             = $this->master_pansel_model->updateData($fileberkas);
+        }
+        echo json_encode($response);
+    }
+
+	function index()
+	{
+        $this->auth_model->checkModule(uri_string());
+        $param['title']         = $this->global_model->getTitle(get_class());
+        $param['modulecrud']    = $this->auth_model->getModulecrud($this->module);
+        $param["actions"]       = array("grid"=>site_url($this->module.'/datagrid'),"showform"=>site_url($this->module.'/showform'),"delete"=>site_url($this->module.'/deletedata'),'create'=>site_url($this->module."/createdata"),'update'=>site_url($this->module."/updatedata"));
+        $param["listparpol"]    = $this->global_model->getDatatwodimension("master_partai_politik","*",null,"id_parpol","nama",array(""=>"---Pilih Parpol---","0"=>"Non Partai"));
+        $param["listdaerah"]    = $this->global_model->getDatatwodimension("master_daerah","*",null,"id_daerah","nama_daerah",array(""=>"---Pilih Daerah---"));
+        $param["column"]        = $this->column;
+        $konten                 = 'master_pansel_page';
+        $this->auth_model->buildViewAdmin($konten,$param);
+	}
+}
+?>

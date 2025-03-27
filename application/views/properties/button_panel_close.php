@@ -1,0 +1,1 @@
+<button type="button" class="close-panel btn btn-xs btn-icon btn-circle btn-danger" title="Tutup"><i class="ti-close"></i></button>

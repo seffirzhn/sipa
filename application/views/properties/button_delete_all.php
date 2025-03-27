@@ -1,0 +1,1 @@
+<button type="button" class="btn btn-danger ml-1" id="deleteall"><i class="ti-trash"></i> <span class="d-md-inline-flex d-none">Hapus Semua</span></button>
